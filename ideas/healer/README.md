@@ -6,7 +6,7 @@ This design is being developed in [`../../src/healer.blend`](../../src/healer.bl
 
 ## Approved concept — v003
 
-**[Angel Healer v003](concepts/angel-healer-v003.png) is the selected design for further development, with the latest fitting refinements below: clean cloth without soil, slender gloved hands, and a more legible feminine figure beneath the drapery.** This decision supersedes the later mask experiments and the earlier gold-crescent Blender studies.
+**[Angel Healer v003](concepts/angel-healer-v003.png) is the selected design for further development, with the latest fitting refinements below: clean ivory cloth and gloves without blood, dirt or soiling, slender gloved hands, and a more legible feminine figure beneath the drapery.** This decision supersedes the later mask experiments and the earlier gold-crescent Blender studies.
 
 Carry forward the slender silhouette, layered ivory garments and embroidery, fully concealed face behind a white textile veil, white inverted angular bowed headpiece with tapered descending ends, red blood-stained hands, restrained cloth staining, and soiled hem. No gold face mask, facial openings, jewel, or gold crown. Preserve the nearly approved garment design when developing supporting views.
 
@@ -137,3 +137,30 @@ The active collection is `V003 - fitting 03 gloved`. The latest direction supers
 The earlier thick bare-hand studies are replaced with newly constructed slender opaque ivory gloves, tapered fingers, opposing thumbs, and clean fitted wrists. The open hand was corrected after review so its fingers extend away from the sleeve and its palm faces upward. Foundation-gown tailoring now describes a modest covered bust, narrower waist, and fuller hips; mantle edges and the overskirt narrow at the waist to let the figure read beneath the cloth. This remains a construction-stage interpretation, not final anatomical or garment approval.
 
 See [front](previews/v003-fitting03-front.png) and [profile](previews/v003-fitting03-side.png). Previous work is preserved hidden, with `src/healer-before-fit03.blend` as a separate checkpoint. All visible garment materials in this collection use new clean shaders; the historical weathered materials remain only with previous studies. Finer glove articulation/cuff fitting, garment folds and the headpiece profile still need refinement before production work.
+
+
+## Fitting review 04 — clean gloves and construction limits
+
+The active collection is `V003 - fitting 04 tailored`. **For the current modeling pass, omit all blood as well as soil and dirt.** This supersedes the earlier blood/material notes; blood can be authored separately later. Historical concept images and hidden previous studies still contain stains.
+
+Retained changes: new articulated, tapered ivory glove meshes with plain clean materials and fitted cuff transitions; a newly shaped covered gown; separate rounded outer hood and featureless opaque face veil; a shallow fore-aft bowed white headpiece instead of the earlier deep flat slab. Previous shoulder/overskirt fitting shapes were restored with clean materials after the new garment tests failed review.
+
+Rejected trials are preserved in the hidden `Fit04 - rejected drapery trials` collection: long crossing bias strips self-intersected, and a 30-frame isolated shoulder-panel cloth simulation produced compressed small wrinkles instead of the desired broad drape. Neither result is the accepted visible garment construction. The procedural fitting approach has **not** delivered the requested step change in garment fidelity. Primary folds, attachment design, natural layering, anatomical hand polish and the overall match to v003 remain unresolved. Do not mistake the higher mesh resolution or clean studio render for final art quality.
+
+Review images: [front](previews/v003-fitting04-front.png), [side](previews/v003-fitting04-side.png), [rear](previews/v003-fitting04-rear.png), and [detail](previews/v003-fitting04-detail.png). The separate checkpoint `src/healer-before-fit04.blend` and Git commit `a76ff90` preserve the preceding state. No new Git commit was created for this pass.
+
+Source scripts: `tools/healer_v003_fit04.py` builds the candidate, `tools/healer_v003_fit04_drape_test.py` runs the supported-panel experiment, and `tools/healer_v003_fit04_review.py` quarantines the failed trials and restores the retained fitting shapes. The garment work requires a deliberate pattern-fitting/sculpting pass before retopology, baking, rigging or animation.
+
+## Hood-over-veil correction
+
+The outer hood now projects forward over the veil, overlaps its sides, and has a continuous closed crown/brow above it. The veil is narrower and recessed inside the hood, rather than sitting in front of and over the outer hood. This layering follows the reference silhouette and is the immediate art priority identified by the user. The rest of the current model is unchanged.
+
+Review: [front](previews/v003-hood-over-veil-front.png), [profile](previews/v003-hood-over-veil-side.png), [head detail](previews/v003-hood-over-veil-detail.png). Original hood/veil meshes are preserved hidden in `Fit04 - prior hood layering`, with `src/healer-before-hood-layering.blend` as an additional local checkpoint. Hood edge softness and finer drapery remain work in progress; this change establishes which garment is outside.
+
+## Focused cloth-form pass
+
+Continued from the accepted hood-over-veil layering with deliberately limited shape changes: a more rounded hood opening, a narrow turned/stitched hood edge, shoulder fold crests with varying widths and local tension, and broad overskirt folds converging toward the waist and opening toward the hem. No blood, dirt, extra ornaments, rigging or runtime changes were introduced.
+
+Review images: [full figure](previews/v003-soft-cloth-front.png), [profile](previews/v003-soft-cloth-side.png), and [hood/shoulder detail](previews/v003-soft-cloth-detail.png). These are modeled geometry changes, not a new cloth simulation. The detail view covers the hood/shoulder pass; the full-figure and profile views also include the subsequent waist-fold study. Previous meshes are hidden in `Fit04 - before soft cloth pass`; `src/healer-before-soft-cloth.blend` is the local safety copy.
+
+The changes improve specific folds and edge shapes, but the character remains a construction-stage source below the approved concept's quality. The broader procedural approach has plateaued; further progress needs deliberate comparison and correction of individual garment forms. Remaining priorities include hood-to-shoulder flow, less collar-like wrap construction, mantle fullness and hem contact, and glove/arm anatomy. Continue reviewing silhouette and layering before adding fine decoration or claiming high-fidelity completion.
