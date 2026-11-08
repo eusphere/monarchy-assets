@@ -1,0 +1,4 @@
+*.blend filter=lfs diff=lfs merge=lfs -text
+ideas/healer/**/*.png filter=lfs diff=lfs merge=lfs -text
+ideas/healer/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+ideas/world-concepts/*.png filter=lfs diff=lfs merge=lfs -text
