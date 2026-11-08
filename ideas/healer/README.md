@@ -164,3 +164,9 @@ Continued from the accepted hood-over-veil layering with deliberately limited sh
 Review images: [full figure](previews/v003-soft-cloth-front.png), [profile](previews/v003-soft-cloth-side.png), and [hood/shoulder detail](previews/v003-soft-cloth-detail.png). These are modeled geometry changes, not a new cloth simulation. The detail view covers the hood/shoulder pass; the full-figure and profile views also include the subsequent waist-fold study. Previous meshes are hidden in `Fit04 - before soft cloth pass`; `src/healer-before-soft-cloth.blend` is the local safety copy.
 
 The changes improve specific folds and edge shapes, but the character remains a construction-stage source below the approved concept's quality. The broader procedural approach has plateaued; further progress needs deliberate comparison and correction of individual garment forms. Remaining priorities include hood-to-shoulder flow, less collar-like wrap construction, mantle fullness and hem contact, and glove/arm anatomy. Continue reviewing silhouette and layering before adding fine decoration or claiming high-fidelity completion.
+
+## Configurable metalwork
+
+The bowed headpiece, both wrist cuffs, and the broad necklace share the Blender material `TeamAccent`. The necklace lies over the finished drapery. Its articulated, flat plaques take their metalwork cue from Quaithe’s mask and fan around the neckline. The studio preview uses antique gold against pearl-white cloth. In a game export, preserve the material name so the client can tint all three accent regions together per piece. The current runtime still needs selective tinting.
+
+[Full figure](previews/v003-plaque-collar-figure.png) · [Necklace and cuffs](previews/v003-plaque-collar-detail.png)
