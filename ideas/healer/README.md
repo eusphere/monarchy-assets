@@ -170,3 +170,7 @@ The changes improve specific folds and edge shapes, but the character remains a 
 The bowed headpiece, both wrist cuffs, and the broad necklace share the Blender material `TeamAccent`. The necklace lies over the finished drapery. Its articulated, flat plaques take their metalwork cue from Quaithe’s mask and fan around the neckline. The studio preview uses antique gold against pearl-white cloth. In a game export, preserve the material name so the client can tint all three accent regions together per piece. The current runtime still needs selective tinting.
 
 [Full figure](previews/v003-plaque-collar-figure.png) · [Necklace and cuffs](previews/v003-plaque-collar-detail.png)
+
+## Beltless Healer review renders
+
+The [three-quarter view](renders/v003/three-quarter.png) shows the current pearl-white fitting with the gold circlet, bowed headpiece, plaque collar and cuffs. Use the [front view](renders/v003/front.png) to judge the waist silhouette, the [rear view](renders/v003/rear.png) to follow the cuff chain behind the mantle, and the [portrait](renders/v003/portrait.png) to inspect how the circlet fastens over the hood. These studio renders come from `src/healer.blend`.
