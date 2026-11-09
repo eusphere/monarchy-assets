@@ -4,6 +4,14 @@ Healer is an order whose spirits can be angels or demons, typically angels. Our 
 
 This design is being developed in [`../../src/healer.blend`](../../src/healer.blend). Healer is the art direction name here; the runtime currently identifies its healing piece as `CLERIC` (High Cleric). This brief does not rename that gameplay identifier.
 
+## Current Blender fitting
+
+The beltless Healer has a smooth pearl-white mannequin face with a small nose, softly modeled cheeks and a tapered chin. The hood frames a blank eye area and a mouthless lower face. The circlet, bowed headpiece, collar, cuffs and rear cuff chain share the gold accent material.
+
+[Front](renders/v004/front.png) · [Three-quarter](renders/v004/three-quarter.png) · [Rear](renders/v004/rear.png) · [Portrait](renders/v004/portrait.png)
+
+The following sections record the concept and earlier fittings. The veiled Blender checkpoint is available at commit `0178d6a`.
+
 ## Approved concept — v003
 
 **[Angel Healer v003](concepts/angel-healer-v003.png) is the selected design for further development, with the latest fitting refinements below: clean ivory cloth and gloves without blood, dirt or soiling, slender gloved hands, and a more legible feminine figure beneath the drapery.** This decision supersedes the later mask experiments and the earlier gold-crescent Blender studies.
@@ -173,4 +181,4 @@ The bowed headpiece, both wrist cuffs, and the broad necklace share the Blender 
 
 ## Beltless Healer review renders
 
-The [three-quarter view](renders/v003/three-quarter.png) shows the current pearl-white fitting with the gold circlet, bowed headpiece, plaque collar and cuffs. Use the [front view](renders/v003/front.png) to judge the waist silhouette, the [rear view](renders/v003/rear.png) to follow the cuff chain behind the mantle, and the [portrait](renders/v003/portrait.png) to inspect how the circlet fastens over the hood. These studio renders come from `src/healer.blend`.
+The [three-quarter view](renders/v003/three-quarter.png) shows the earlier veiled pearl-white fitting with the gold circlet, bowed headpiece, plaque collar and cuffs. Use the [front view](renders/v003/front.png) to judge the waist silhouette, the [rear view](renders/v003/rear.png) to follow the cuff chain behind the mantle, and the [portrait](renders/v003/portrait.png) to inspect how the circlet fastens over the hood. These studio renders come from `src/healer.blend`.
