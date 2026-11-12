@@ -193,7 +193,7 @@ for phi in np.radians(np.linspace(6, 88, 12)):               # dome, from near t
 for z in np.arange(centre.z - 0.012, brow_z, -0.012):       # straight sides down to the brow
     rings.append([(x0 + (radius(t, z) + 0.006) * math.cos(t), cy + (radius(t, z) + 0.006) * math.sin(t), z) for t in th])
 rb = [radius(t, brow_z) for t in th]
-for dr, dz in ((0.006, 0.0), (0.0125, 0.003), (0.0125, -0.017), (0.006, -0.019)):   # raised rim band
+for dr, dz in ((0.006, 0.0), (0.0082, 0.002), (0.0082, -0.011), (0.006, -0.0125)):   # a slight rim, barely proud of the dome
     rings.append([(x0 + (rb[j] + dr) * math.cos(th[j]), cy + (rb[j] + dr) * math.sin(th[j]), brow_z + dz) for j in range(T)])
 cv = [p for r in rings for p in r]
 top = np.mean(np.array(rings[0]), axis=0) + np.array([0, 0, 0.003])
@@ -204,7 +204,7 @@ face_out(cap)
 skinned(cap)
 sub = cap.modifiers.new('Smooth', 'SUBSURF')
 sub.levels = sub.render_levels = 1
-band_bottom = brow_z - 0.019
+band_bottom = brow_z - 0.0125
 
 # ------------------------------------------------------------------ halo disc
 R_OUT, R_IN, FLUTES, SEG = 0.205, 0.070, 56, 448

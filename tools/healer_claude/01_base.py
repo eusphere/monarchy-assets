@@ -101,10 +101,10 @@ for s in ('R', 'L'):
     sh, el = bones['UpperArm.' + s]
     wr = bones['Hand.' + s][0]
     hand_tip = bones['Hand.' + s][1]
-    # Slender arms under a rounded shoulder.
+    # Slender arms that taper away from a soft shoulder, not a cylinder hung on the torso.
     parts.append(limb([sh + (sh - el) * 0.04, sh, (sh + el) / 2, el, (el + wr) / 2, wr,
                        wr + (hand_tip - wr) * 0.15],
-                      [0.042, 0.050, 0.037, 0.031, 0.026, 0.022, 0.020]))
+                      [0.036, 0.045, 0.034, 0.029, 0.025, 0.021, 0.019]))
     hip, knee = bones['Thigh.' + s]
     ankle = bones['Foot.' + s][0]
     toe = ankle + np.array([0, -0.16, -0.05])
