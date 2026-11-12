@@ -181,23 +181,55 @@ bind('Underdress skirt', {'Pelvis': pel, 'Skirt': mid, 'Hem.L': hem * left, 'Hem
 # ------------------------------------------------------------------ veil
 vo = bpy.data.objects['Head veil']
 vc = coords(vo)
-bw, dist = from_body(vc)
-z, x = vc[:, 2], vc[:, 0]
-on_body = 1 - sstep(0.03, 0.09, dist)                   # lying on shoulders and arms
+z = vc[:, 2]
+# The veil hangs down her back, clear of the arms, so it follows the spine by height alone.
 head = sstep(nz1 - 0.04, nz1 + 0.05, z)
-# Hanging cloth: off the arms at the sides, off the back and chest elsewhere.
-side = sstep(0.15, 0.22, np.abs(x)) * (1 - sstep(1.45, 1.60, z))
-W = {n: bw[n] * on_body * (1 - head) for n in bw}
-free = (1 - on_body) * (1 - head)
-back = free * (1 - side)
-W['Head'] = W.get('Head', 0) + head
-W['Chest'] = W.get('Chest', 0) + back * sstep(1.50, 1.65, z)
-W['Spine'] = W.get('Spine', 0) + back * (sstep(1.30, 1.45, z) - sstep(1.50, 1.65, z))
-W['Pelvis'] = W.get('Pelvis', 0) + back * (sstep(1.00, 1.20, z) - sstep(1.30, 1.45, z))
-W['Skirt'] = back * (1 - sstep(1.00, 1.20, z))
-W['SleeveFall.L'] = free * side * (x > 0)
-W['SleeveFall.R'] = free * side * (x <= 0)
+rest = 1 - head
+W = {'Head': head,
+     'Chest': rest * sstep(1.50, 1.65, z),
+     'Spine': rest * (sstep(1.30, 1.45, z) - sstep(1.50, 1.65, z)),
+     'Pelvis': rest * (sstep(1.00, 1.20, z) - sstep(1.30, 1.45, z)),
+     'Skirt': rest * (1 - sstep(1.00, 1.20, z))}
 bind('Head veil', W, rounds=10)
+
+# ------------------------------------------------------------------ chain
+# Each link stays rigid and takes one blend of wrist and sag, graded along the chain, so the
+# line eases from the hands into the hanging middle instead of breaking where the weights change.
+import bmesh
+ch = bpy.data.objects['Healer - cuff to cuff plaque chain']
+cc = coords(ch)
+bm = bmesh.new()
+bm.from_mesh(ch.data)
+bm.verts.ensure_lookup_table()
+seen = np.zeros(len(bm.verts), bool)
+isls = []
+for v in bm.verts:
+    if seen[v.index]:
+        continue
+    stack, isl = [v], []
+    seen[v.index] = True
+    while stack:
+        a = stack.pop()
+        isl.append(a.index)
+        for e in a.link_edges:
+            b = e.other_vert(a)
+            if not seen[b.index]:
+                seen[b.index] = True
+                stack.append(b)
+    isls.append(np.array(isl))
+bm.free()
+cent = np.array([cc[i].mean(axis=0) for i in isls])
+wr = bones['ChainAnchor.R'][0]
+phi = np.arctan2(-cent[:, 0], -cent[:, 1]) % (2 * np.pi)
+phi0 = np.arctan2(-wr[0], -wr[1]) % (2 * np.pi)
+order = np.argsort((phi - phi0 + 0.3) % (2 * np.pi))
+wR, wL, wS = np.zeros(len(cc)), np.zeros(len(cc)), np.zeros(len(cc))
+for rank, oi in enumerate(order):
+    u = rank / max(len(order) - 1, 1)
+    r = float(1 - sstep(0.0, 0.42, u))
+    l = float(sstep(0.58, 1.0, u))
+    wR[isls[oi]], wL[isls[oi]], wS[isls[oi]] = r, l, max(1 - r - l, 0)
+bind(ch.name, {'ChainAnchor.R': wR, 'ChainAnchor.L': wL, 'Chain.Sag': wS})
 
 # ------------------------------------------------------------------ test frames
 rig.data.pose_position = 'POSE'
@@ -210,8 +242,11 @@ for action, frames in SHOTS.items():
     tag = action.split('| ')[1].lower()
     for f in frames:
         sc.frame_set(f)
-        render('anim-%s-f%02d' % (tag, f), 22, res=(520, 1020), samples=24)
+        render('anim/anim-%s-f%02d' % (tag, f), 22, res=(520, 1020), samples=24)
         if tag != 'idle' and f == frames[1]:
-            render('anim-%s-f%02d-side' % (tag, f), 90, res=(520, 1020), samples=24)
-            render('anim-%s-f%02d-rear' % (tag, f), 160, res=(520, 1020), samples=24)
+            render('anim/anim-%s-f%02d-side' % (tag, f), 90, res=(520, 1020), samples=24)
+            render('anim/anim-%s-f%02d-rear' % (tag, f), 160, res=(520, 1020), samples=24)
+rig.animation_data.action = bpy.data.actions['Healer | Idle']
+sc.frame_set(1)
+save()
 print('stage 9 done')

@@ -6,8 +6,8 @@ survive contact with the solver, so the veil is made the way the concept reads:
 * `Head wrap`  - a taut, finely striated shell stretched over the head and
   neck, built directly from the head's silhouette (no simulation).
 * `Head veil`  - a full, pleated panel hung from a line round the back of the
-  head, temple to temple. It falls over the shoulders and arms and down the
-  back to about the knee."""
+  head, ear to ear. It falls behind the shoulders and down the back to about
+  the knee, clear of the arms."""
 import os
 import sys
 
@@ -175,6 +175,9 @@ for i in range(len(zs)):
 # Never narrower than the level above by much: the veil should fall clear, not tuck under ledges.
 for i in range(1, len(zs)):
     shell[i] = np.maximum(shell[i], shell[i - 1] - 0.012)
+# Left and right alike, so the veil has no slope to slide off sideways.
+mirror = shell[:, (GT // 2 - np.arange(GT)) % GT]
+shell = np.maximum(shell, mirror)
 shell = blur(shell, 1.0, 1.5) + 0.007
 gr = []
 for i in range(len(zs)):
@@ -182,12 +185,14 @@ for i in range(len(zs)):
 guard = new_object('Waist guard', gr, grid_faces(len(zs), GT, True), 'Sim')
 guard.hide_render = True
 face_out(guard)
-add_collision(guard, 0.004, friction=0)
+add_collision(guard, 0.004, friction=6)
 
 # ------------------------------------------------------------------ hanging veil
-C = int(300 * SCALE)
+C = int(230 * SCALE)
 R = int(210 * SCALE)
-A0, A1 = np.radians(-42), np.radians(222)        # temple, round the back, to the other temple
+# Behind the ears only: the veil falls down the back, behind the shoulders, and never lies on
+# the arms. The arms drop in Idle and Walk, and cloth draped over them cannot follow that.
+A0, A1 = np.radians(20), np.radians(160)
 ang = np.linspace(A0, A1, C)
 # Attachment line: a ring on the upper skull of the wrap.
 pin_row = 14
@@ -197,14 +202,14 @@ start = np.stack([pc[0] + r_at * np.sin(pphi) * np.cos(ang),
                   pc[1] + r_at * np.sin(pphi) * np.sin(ang),
                   pc[2] + r_at * np.cos(pphi) + 0 * ang], -1)
 # Profile the cloth follows away from the head: out over the shoulders, then down.
-prof = np.array([(0.000, 0.000), (0.060, -0.035), (0.150, -0.130), (0.250, -0.300),
-                 (0.310, -0.600), (0.380, -1.100), (0.420, -1.470)])
+prof = np.array([(0.000, 0.000), (0.040, -0.040), (0.090, -0.140), (0.130, -0.300),
+                 (0.170, -0.600), (0.215, -1.100), (0.245, -1.470)])
 seg = np.linalg.norm(np.diff(prof, axis=0), axis=1)
 dist = np.concatenate([[0], np.cumsum(seg)])
 even = np.linspace(0, dist[-1], R)
 pr = np.interp(even, dist, prof[:, 0])
 pz = np.interp(even, dist, prof[:, 1])
-PLEATS = 34
+PLEATS = 22
 vv = np.zeros((R, C, 3))
 for i in range(R):
     t = i / (R - 1)

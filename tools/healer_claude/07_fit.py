@@ -231,7 +231,8 @@ s_old = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(cent_o, axis=0), a
 TARGET = s_old[-1] * 1.14
 # A heavy chain does not stand off the cloth: away from the wrists it lies against the veil,
 # so its line is taken from the veil's own surface.
-vc = eval_coords(bpy.data.objects['Head veil'])
+# The veil only covers her back now, so the skirt and sleeves give the line at the sides.
+vc = np.vstack([eval_coords(bpy.data.objects[n]) for n in ('Head veil', 'Underdress skirt', 'Fitted bodice')])
 va = np.arctan2(vc[:, 1], vc[:, 0]) % (2 * np.pi)
 vr = np.hypot(vc[:, 0], vc[:, 1])
 VT = 72
