@@ -36,4 +36,5 @@ stage 06_materials "$BLENDER" -b "$FILE" --python tools/healer_claude/06_materia
 stage 07_fit       "$BLENDER" -b "$FILE" --python tools/healer_claude/07_fit.py
 stage 08_posture   "$BLENDER" -b "$FILE" --python tools/healer_claude/08_posture.py
 stage 09_bind      "$BLENDER" -b "$FILE" --python tools/healer_claude/09_bind.py
+stage 11_walk      "$BLENDER" -b "$FILE" --python tools/healer_claude/11_walk.py
 echo "== done $(date +%H:%M:%S)"

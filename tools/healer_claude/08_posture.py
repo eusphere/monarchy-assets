@@ -33,8 +33,8 @@ HIP_SHIFT = 0.034          # hips toward the figure's left
 SHOULDER_BACK = 0.016      # shoulders travel the other way
 HIP_FORWARD = 0.020
 CHEST_BACK = 0.012
-SHOULDER_TILT = np.radians(3.2)     # figure's left shoulder lower
-SHOULDER_DROP = 0.014               # both shoulders slope more, lengthening the neck
+SHOULDER_TILT = np.radians(2.0)     # figure's left shoulder lower
+SHOULDER_DROP = 0.003               # shoulders stay square; she is not meek
 HEAD_TILT = np.radians(-6.5)        # crown toward the raised (right) hand
 HEAD_NOD = np.radians(6.0)          # face inclined downward
 
