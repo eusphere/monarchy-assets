@@ -185,7 +185,7 @@ for i in range(len(zs)):
 guard = new_object('Waist guard', gr, grid_faces(len(zs), GT, True), 'Sim')
 guard.hide_render = True
 face_out(guard)
-add_collision(guard, 0.004, friction=6)
+add_collision(guard, 0.004, friction=1.5)
 
 # ------------------------------------------------------------------ hanging veil
 C = int(230 * SCALE)
@@ -231,7 +231,7 @@ cs.quality = 8
 cs.mass = 0.12
 cs.tension_stiffness = cs.compression_stiffness = 14
 cs.shear_stiffness = 4
-cs.bending_stiffness = 0.10
+cs.bending_stiffness = 0.45        # stiff enough to keep long pleats instead of crinkling
 cs.tension_damping = cs.compression_damping = 5
 cs.shear_damping = 5
 cs.bending_damping = 0.5

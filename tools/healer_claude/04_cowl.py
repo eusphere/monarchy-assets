@@ -41,7 +41,7 @@ def torso_point(angle_deg, z, off):
     return np.array([hw * np.cos(a), (bk if s > 0 else fr) * s, z])
 
 
-def strip(name, line, width, band, folds, pin_rows, frames, mass=0.12):
+def strip(name, line, width, band, folds, pin_rows, frames, mass=0.12, pin_top=False):
     """A pleated strip of cloth `width` wide, gathered into `band`, following `line`."""
     nw = max(int(width / 0.011 * SCALE), 12)
     seg = np.linalg.norm(np.diff(line, axis=0), axis=1)
@@ -66,8 +66,12 @@ def strip(name, line, width, band, folds, pin_rows, frames, mass=0.12):
     ob = new_object(name, verts.reshape(-1, 3), grid_faces(nl, nw, False), 'Garments', uv.reshape(-1, 2))
     pin = ob.vertex_groups.new(name='Pin')
     idx = []
-    for r in pin_rows:
-        r = r % nl
+    rows_to_pin = [r % nl for r in pin_rows]
+    if pin_top:
+        # Held where it crosses the shoulder, as a real sash is pinned, so it cannot slide down the arm.
+        apex = int(np.argmax(line[:, 2]))
+        rows_to_pin += [apex - 1, apex, apex + 1]
+    for r in rows_to_pin:
         idx += list(range(r * nw, (r + 1) * nw))
     pin.add(idx, 1.0, 'REPLACE')
     cloth = ob.modifiers.new('Cloth', 'CLOTH')
@@ -127,7 +131,7 @@ sash = path([(-55, 1.345, T), (-90, 1.50, T), (-135, 1.68, T), (-165, 1.80, T + 
              (-200, 1.80, T + 0.004), (-235, 1.68, T), (-270, 1.54, T), (-305, 1.42, T), (-360, 1.385, T),
              (-450, 1.395, T + 0.012), (-540, 1.40, T + 0.012), (-630, 1.385, T + 0.012), (-720, 1.365, T + 0.012),
              (-810, 1.36, T + 0.026), (-900, 1.37, T + 0.026), (-990, 1.355, T + 0.026), (-1060, 1.335, T + 0.026)], 700)
-wrap = strip('Shoulder wrap', sash, width=0.30, band=0.13, folds=12, pin_rows=(0, 1, 2, -3, -2, -1), frames=70)
+wrap = strip('Shoulder wrap', sash, width=0.30, band=0.13, folds=12, pin_rows=(0, 1, 2, -3, -2, -1), frames=70, pin_top=True)
 collide_before_subsurf(wrap)
 
 # ---------------------------------------------------------------- cowl
