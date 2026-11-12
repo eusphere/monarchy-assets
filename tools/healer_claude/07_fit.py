@@ -68,7 +68,7 @@ bm.from_mesh(bod.data)
 bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < 1.26], context='VERTS')
 bm.normal_update()
 for v in bm.verts:
-    v.co += v.normal * 0.0045
+    v.co += v.normal * 0.0035
 bm.to_mesh(bod.data)
 bm.free()
 bod.data.materials.clear()
@@ -83,7 +83,7 @@ tex.noise_scale = 0.035
 tex.noise_depth = 2
 dis = bod.modifiers.new('Creases', 'DISPLACE')
 dis.texture = tex
-dis.strength = 0.006
+dis.strength = 0.003
 dis.mid_level = 0.35
 body.hide_render = True
 

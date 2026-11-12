@@ -176,7 +176,16 @@ pel = sstep(0.95, 1.22, z)
 hem = 1 - sstep(0.10, 0.42, z)
 mid = np.clip(1 - pel - hem, 0, 1)
 left = sstep(-0.06, 0.06, sk[:, 0] - 0.02)
-bind('Underdress skirt', {'Pelvis': pel, 'Skirt': mid, 'Hem.L': hem * left, 'Hem.R': hem * (1 - left)}, rounds=6)
+# The front of the skirt rides on the legs, so a step shows as a knee pressing the cloth forward.
+legs, _ = from_body(sk, k=6)
+LEG = ('Thigh.L', 'Shin.L', 'Thigh.R', 'Shin.R')
+leg_tot = sum(legs.get(n, 0) for n in LEG)
+front = sstep(0.04, -0.07, sk[:, 1])
+ride = 0.70 * front * mid * (leg_tot > 1e-6)
+W = {'Pelvis': pel, 'Skirt': mid - ride, 'Hem.L': hem * left, 'Hem.R': hem * (1 - left)}
+for n in LEG:
+    W[n] = ride * legs.get(n, 0) / np.maximum(leg_tot, 1e-6)
+bind('Underdress skirt', W, rounds=10)
 
 # ------------------------------------------------------------------ veil
 vo = bpy.data.objects['Head veil']

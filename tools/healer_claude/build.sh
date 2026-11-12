@@ -22,7 +22,7 @@ stage() {
     if [ -f "$FILE" ]; then cp "$FILE" "$LOG_DIR/before-$name.blend"; fi
     echo "== $name $(date +%H:%M:%S)"
     "$@" > "$LOG_DIR/$name.log" 2>&1
-    if grep -q "Traceback" "$LOG_DIR/$name.log"; then
+    if grep -qE "Traceback|SyntaxError|Error: Python" "$LOG_DIR/$name.log"; then
         echo "$name failed; see $LOG_DIR/$name.log"; exit 1
     fi
 }
