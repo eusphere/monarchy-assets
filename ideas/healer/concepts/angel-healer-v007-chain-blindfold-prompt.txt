@@ -1,0 +1,11 @@
+Base image: angel-healer-v003.png. References: reference/chain-blindfold-reference.webp (for the idea of a curtain of fine chains hanging over the eyes from a brow band; do not copy its sun disc, spikes, body paint, pose or bracers).
+
+Make precise edits to the head of this existing full-body fantasy healer concept; preserve everything else.
+METAL: The headpiece is no longer ivory. It is worn, hammered gold: deep warm gold with uneven polish, darker tarnish in the recesses, soft hammer marks and hairline scratches. Heavy, old, handled. Not bright, not plated, not jewelled.
+BROW BAND: Directly under the crescent, add a slim flat band of the same worn gold across the brow from temple to temple. The crescent's inner edge meets the band at each temple so the two read as one headpiece.
+CHAIN BLINDFOLD: From the whole length of the brow band hangs a dense curtain of very fine gold chains, strand beside strand with no gaps, falling straight down over both eyes to the bridge of the nose and the tops of the cheekbones. It is dense enough that the eyes cannot be seen at all and she clearly cannot see out: no eyes, glints or sockets visible through it. The strands end in a soft shallow scallop, slightly longer at the outer edges than at the centre.
+SIDE STRANDS: At each temple a few longer chains continue down past the jaw in loose swags and reach the collar, framing the mouth. They do not cross the mouth.
+FACE: Below the chain curtain the face is bare and visible: the tip of the nose, closed lips, and the chin. Pale, smooth, calm, expressionless skin. Lips closed and still, a muted dried-blood red. No smile.
+WRAP: The rest of the head stays tightly wrapped in the same sheer ivory voile with fine vertical striations: over the crown under the crescent, down the sides of the face behind the side chains, and under the chin like a wimple, leaving only the oval of nose, mouth and chin exposed.
+MOOD: Regal, spiritual, and a little frightening. She faces the viewer without seeing them.
+INVARIANTS: preserve the entire costume, every layered ivory drape, the long hanging veil, embroidered borders, folds, slender silhouette, hand anatomy and gestures, hem, background, lighting, full-body framing and realistic premium game character concept finish. No new objects, no text, no weapons, no injury or gore.
