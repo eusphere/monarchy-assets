@@ -14,9 +14,10 @@ import bpy
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-BLEND = os.path.join(ROOT, 'src', 'healer-claude.blend')
+# HEALER_BLEND / HEALER_RENDERS let a trial build go somewhere other than the checked-in file.
+BLEND = os.environ.get('HEALER_BLEND') or os.path.join(ROOT, 'src', 'healer-claude.blend')
 SOURCE = os.path.join(ROOT, 'src', 'healer.blend')
-RENDERS = os.path.join(ROOT, 'ideas', 'healer', 'renders', 'claude')
+RENDERS = os.environ.get('HEALER_RENDERS') or os.path.join(ROOT, 'ideas', 'healer', 'renders', 'claude')
 
 
 def collection(name):
@@ -127,7 +128,7 @@ def collide_before_subsurf(ob, thickness=0.004):
     ob.modifiers.move(i, 0)
 
 
-def simulate(ob, frames, on_frame=None, max_frame_seconds=45):
+def simulate(ob, frames, on_frame=None, max_frame_seconds=float(os.environ.get('HEALER_MAX_FRAME', '45'))):
     """Step the scene so the cloth on `ob` solves, then freeze the result."""
     sc = bpy.context.scene
     sc.frame_start = 1

@@ -128,6 +128,12 @@ sub = wrap.modifiers.new('Smooth', 'SUBSURF')
 sub.levels = sub.render_levels = 2
 head.hide_render = True                  # the wrap now stands in for the head
 
+if os.environ.get('HEALER_VEIL', '1') == '0':
+    # First pass of the pipeline: only the head wrap, which the cowl and sash need before the veil exists.
+    save()
+    print('stage 3 head wrap only')
+    sys.exit(0)
+
 # ------------------------------------------------------------------ colliders
 add_collision(bpy.data.objects['Body form'], 0.005)
 collide_before_subsurf(wrap, 0.004)

@@ -112,10 +112,13 @@ def path(keys, n=400):
 add_collision(bpy.data.objects['Body form'], 0.005, friction=20)
 collide_before_subsurf(bpy.data.objects['Head wrap'])
 for n in ('Underdress skirt', 'Head veil'):          # neither takes part here
+    if n not in bpy.data.objects:
+        continue
     for m in list(bpy.data.objects[n].modifiers):
         if m.type == 'COLLISION':
             bpy.data.objects[n].modifiers.remove(m)
-bpy.data.objects['Head veil'].hide_render = True     # re-draped over the wraps next
+if 'Head veil' in bpy.data.objects:
+    bpy.data.objects['Head veil'].hide_render = True  # re-draped over the wraps next
 
 # ---------------------------------------------------------------- sash
 # (angle, z, clearance)
