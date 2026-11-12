@@ -180,9 +180,14 @@ mirror = shell[:, (GT // 2 - np.arange(GT)) % GT]
 shell = np.maximum(shell, mirror)
 shell = blur(shell, 1.0, 1.5) + 0.007
 gr = []
+# Close the top in toward the neck. Left open, the shell is a wide cup at shoulder height and
+# one side of the veil can drop inside it while the other falls outside, dragging it off-centre.
+for cz, f in ((1.935, 0.0), (1.890, 0.55)):
+    gr += [((0.070 * (1 - f) + shell[0, j] * f) * np.cos(gt[j]), (0.070 * (1 - f) + shell[0, j] * f) * np.sin(gt[j]), cz)
+           for j in range(GT)]
 for i in range(len(zs)):
     gr += [(shell[i, j] * np.cos(gt[j]), shell[i, j] * np.sin(gt[j]), zs[i]) for j in range(GT)]
-guard = new_object('Waist guard', gr, grid_faces(len(zs), GT, True), 'Sim')
+guard = new_object('Waist guard', gr, grid_faces(len(zs) + 2, GT, True), 'Sim')
 guard.hide_render = True
 face_out(guard)
 add_collision(guard, 0.004, friction=1.5)
