@@ -5,9 +5,9 @@ domed cap and covers everything from the brow to just above the lips. Only the
 mouth and chin are bare. A fluted disc stands behind the head as a halo, and
 thin rods hang at the temples.
 
-Also here, because the mask is what reveals it: the lower face. The source
-head is a featureless egg, so lips and a chin are modelled onto it and the
-head wrap is opened round them. (The earlier crescent is 05_crescent_legacy.py.)"""
+The face itself comes from stage 1b. Here the head wrap is cut back to a hood
+behind the ears, so the cheeks, jaw, chin and throat are bare skin.
+(The earlier crescent is 05_crescent_legacy.py.)"""
 import math
 import os
 import sys
@@ -33,89 +33,37 @@ face = bpy.data.objects['Healer - pearl face']
 wrap = bpy.data.objects['Head wrap']
 fc = coords(face)
 wc = coords(wrap)
-crown_z = fc[:, 2].max()
-x0 = float(np.median(fc[fc[:, 2] > crown_z - 0.15][:, 0]))
-strip = np.abs(fc[:, 0] - x0) < 0.012
-zs = np.arange(crown_z - 0.03, crown_z - 0.34, -0.005)
-front = np.array([fc[strip & (np.abs(fc[:, 2] - z) < 0.006)][:, 1].min() for z in zs])
-brow_y = front.min()
-chin_z = float(zs[np.where(front <= brow_y + 0.030)[0][-1]])
+crown_z = float(face['lm_crown'])
+x0 = float(face['lm_centre_x'])
+chin_z = float(face['lm_chin'])
+mouth_z = float(face['lm_mouth'])
 H = crown_z - chin_z
-mouth_z = crown_z - 0.80 * H
 brow_z = crown_z - 0.34 * H                    # lower rim of the cap, low on the forehead
-visor_bottom = mouth_z + 0.060 * H             # just above the upper lip
-cy = float((fc[fc[:, 2] > crown_z - 0.15][:, 1].min() + fc[fc[:, 2] > crown_z - 0.15][:, 1].max()) / 2)
-print('head: crown %.3f chin %.3f mouth %.3f brow %.3f centre x %.3f y %.3f' % (crown_z, chin_z, mouth_z, brow_z, x0, cy), flush=True)
+visor_bottom = float(face['lm_lip_top']) + 0.006   # just above the upper lip: the nose is covered too
+skull = fc[fc[:, 2] > crown_z - 0.15]
+cy = float((skull[:, 1].min() + skull[:, 1].max()) / 2)
+print('head: crown %.3f chin %.3f mouth %.3f brow %.3f visor bottom %.3f centre x %.3f y %.3f'
+      % (crown_z, chin_z, mouth_z, brow_z, visor_bottom, x0, cy), flush=True)
 
-# ------------------------------------------------------------------ lower face
-if not face.get('claude_lips'):
-    nrm = np.empty(3 * len(face.data.vertices))
-    face.data.vertices.foreach_get('normal', nrm)
-    nrm = nrm.reshape(-1, 3)
-    u = fc[:, 0] - x0
-    v = fc[:, 2] - mouth_z
-    onface = (fc[:, 1] < cy - 0.02).astype(float)
-    g = lambda a, s: np.exp(-(a / s) ** 2)        # noqa: E731
-    bow = 1 - 0.28 * g(u, 0.006)                  # the dip of the upper lip's bow
-    upper = 0.0062 * g(u, 0.031) * g(v - 0.0085, 0.0068) * bow
-    lower = 0.0078 * g(u, 0.026) * g(v + 0.0100, 0.0082)
-    part = -0.0052 * g(u, 0.034) * g(v, 0.0028)   # the line between the lips
-    hollow = -0.0036 * g(u, 0.024) * g(v + 0.028, 0.008)
-    chin = 0.0085 * g(u, 0.026) * g(v + 0.052, 0.017)
-    corners = -0.0024 * (g(u - 0.035, 0.007) + g(u + 0.035, 0.007)) * g(v, 0.007)
-    d = (upper + lower + part + hollow + chin + corners) * onface
-    set_coords(face, fc + nrm * d[:, None])
-    lip = np.clip((upper / 0.0062 + lower / 0.0078) * 2.2 - 0.30, 0, 1) * onface
-    attr = face.data.attributes.new('Lip', 'FLOAT', 'POINT')
-    attr.data.foreach_set('value', lip)
-    face['claude_lips'] = 1
-    fc = coords(face)
-skin = bpy.data.materials.get('Healer skin') or bpy.data.materials.new('Healer skin')
-skin.use_nodes = True
-nt = skin.node_tree
-nt.nodes.clear()
-out = nt.nodes.new('ShaderNodeOutputMaterial')
-bsdf = nt.nodes.new('ShaderNodeBsdfPrincipled')
-at = nt.nodes.new('ShaderNodeAttribute')
-at.attribute_name = 'Lip'
-mix = nt.nodes.new('ShaderNodeMix')
-mix.data_type = 'RGBA'
-mix.inputs[6].default_value = (0.78, 0.70, 0.63, 1)          # pale, bloodless skin
-mix.inputs[7].default_value = (0.045, 0.010, 0.012, 1)       # lips the colour of dried blood
-nt.links.new(at.outputs['Fac'], mix.inputs[0])
-nt.links.new(mix.outputs[2], bsdf.inputs['Base Color'])
-bsdf.inputs['Roughness'].default_value = 0.48
-bsdf.inputs['Subsurface Weight'].default_value = 0.15
-bsdf.inputs['Subsurface Radius'].default_value = (0.012, 0.006, 0.004)
-nt.links.new(bsdf.outputs[0], out.inputs['Surface'])
-face.data.materials.clear()
-face.data.materials.append(skin)
-face.hide_render = face.hide_viewport = False
-
-# Open the wrap round the mouth and chin, like a wimple: an oval that narrows to the chin.
-remove('Wimple rim')
-oz_top = visor_bottom + 0.014
-oz_bot = chin_z - 0.016
-oz = (oz_top + oz_bot) / 2
-oh = (oz_top - oz_bot) / 2
-
-
-def opening_half_width(z):
-    t = (z - oz) / oh
-    if abs(t) >= 1:
-        return 0.0
-    return 0.058 * math.sqrt(1 - t * t) * (1 - 0.30 * max(-t, 0.0))
-
-
+# ------------------------------------------------------------------ bare the face and throat
+# No cloth round the face: the wrap stays only as a hood over the back and sides of the head,
+# behind the line of the ears. Cheeks, jaw, chin and the front of the neck are skin.
+OPEN = math.radians(78)                        # half-angle of the opening, measured from straight ahead
 if not wrap.get('claude_opened'):
     bm = bmesh.new()
     bm.from_mesh(wrap.data)
-    kill = [v for v in bm.verts if v.co.y < cy - 0.02 and abs(v.co.x - x0) < opening_half_width(v.co.z)]
+    kill = []
+    for v in bm.verts:
+        ang = math.atan2(v.co.y - cy, v.co.x - x0)
+        off = abs((ang + math.pi / 2 + math.pi) % (2 * math.pi) - math.pi)
+        if off < OPEN and v.co.z < brow_z + 0.004:
+            kill.append(v)
     bmesh.ops.delete(bm, geom=kill, context='VERTS')
     bm.to_mesh(wrap.data)
     bm.free()
     wrap['claude_opened'] = 1
     wc = coords(wrap)
+face.hide_render = face.hide_viewport = False
 
 # ------------------------------------------------------------------ surface the metal sits on
 tri = BVHTree.FromPolygons([tuple(p) for p in wc], [tuple(p.vertices) for p in wrap.data.polygons])
@@ -144,38 +92,6 @@ def skinned(ob, smooth=True):
     arm.object = rig
     return ob
 
-
-# ------------------------------------------------------------------ wimple rim
-# A soft rolled edge of cloth round the opening, where the wrap is folded back from the face.
-NR_, NT_ = 96, 8
-rv, rf = [], []
-for i in range(NR_):
-    a = 2 * math.pi * i / NR_
-    z = oz + oh * 0.985 * math.sin(a)
-    hwid = opening_half_width(z) + 0.002
-    x = x0 + hwid * (1 if math.cos(a) >= 0 else -1)
-    if abs(math.sin(a)) > 0.999:
-        x = x0
-    ang = math.atan2(-1.0, (x - x0) / 0.09)                    # direction from the axis to this point
-    d = Vector((x - x0, 0, 0))
-    yy = cy - math.sqrt(max(radius(math.atan2(-0.09, x - x0), z) ** 2 - (x - x0) ** 2, 1e-6))
-    c = np.array([x, yy - 0.003, z])
-    for k in range(NT_):
-        b = 2 * math.pi * k / NT_
-        rv.append(tuple(c + 0.0045 * np.array([math.cos(b) * math.cos(a), -math.sin(b), math.cos(b) * math.sin(a)])))
-for i in range(NR_):
-    for k in range(NT_):
-        rf.append((i * NT_ + k, ((i + 1) % NR_) * NT_ + k, ((i + 1) % NR_) * NT_ + (k + 1) % NT_, i * NT_ + (k + 1) % NT_))
-rimo = new_object('Wimple rim', rv, rf, 'Garments')
-face_out(rimo)
-rimo.data.materials.append(bpy.data.materials['Voile'])
-rimo.parent = rig
-vg = rimo.vertex_groups.new(name='Head')
-vg.add(list(range(len(rv))), 1.0, 'REPLACE')
-am = rimo.modifiers.new('Healer skin', 'ARMATURE')
-am.object = rig
-sb = rimo.modifiers.new('Smooth', 'SUBSURF')
-sb.levels = sb.render_levels = 1
 
 # ------------------------------------------------------------------ cap
 T = 72
@@ -230,20 +146,39 @@ sol.thickness = 0.006
 sol.offset = 1
 
 # ------------------------------------------------------------------ scale visor
+# The visor hangs from the rim like a curtain of mail: it falls straight from whatever stands
+# furthest out above it (brow, then nose) and never dips into the eye sockets. So its surface is
+# the running maximum of the face's radius from the rim downward, smoothed sideways.
+VA = np.radians(np.linspace(-90 - 80, -90 + 80, 81))
+VZ = np.arange(brow_z + 0.004, visor_bottom - 0.030, -0.003)
+raw = np.array([[radius(a_, z_) for a_ in VA] for z_ in VZ])
+hang_grid = np.maximum.accumulate(raw, axis=0)
+for _ in range(3):                                      # bridge across the nose and the sockets
+    hang_grid = np.maximum(hang_grid, 0.5 * (np.roll(hang_grid, 1, 1) + np.roll(hang_grid, -1, 1)))
+    hang_grid[:, 0], hang_grid[:, -1] = raw[:, 0].cummax() if hasattr(raw[:, 0], 'cummax') else np.maximum.accumulate(raw[:, 0]), np.maximum.accumulate(raw[:, -1])
+kern = np.array([1, 2, 3, 2, 1]) / 9
+hang_grid = np.maximum(hang_grid, np.stack([np.convolve(np.pad(r_, 2, mode='edge'), kern, 'valid') for r_ in hang_grid]))
+
+
+def hang(a_, z_):
+    i = int(np.clip(round((VZ[0] - z_) / 0.003), 0, len(VZ) - 1))
+    return float(np.interp(a_, VA, hang_grid[i]))
+
+
 sv, sf = [], []
 ROW, SW, SH = 0.0118, 0.0150, 0.0185
 SPAN = math.radians(66)
 row = 0
 z = band_bottom + 0.004
 while z - SH > visor_bottom - 0.004:
-    r_mid = radius(-math.pi / 2, z - SH / 2)
+    r_mid = hang(-math.pi / 2, z - SH / 2)
     n = max(int(2 * SPAN * r_mid / (SW * 0.86)), 6)
     for i in range(n + (row % 2)):
         a = -math.pi / 2 - SPAN + 2 * SPAN * (i + 0.5 * (1 - row % 2)) / n
         if abs(a + math.pi / 2) > SPAN + 0.02:
             continue
-        r_top = radius(a, z) + 0.0045 + 0.0012 * (row % 2)
-        r_bot = radius(a, z - SH) + 0.0075
+        r_top = hang(a, z) + 0.0050 + 0.0012 * (row % 2)
+        r_bot = hang(a, z - SH) + 0.0080
         out_v = np.array([math.cos(a), math.sin(a), 0.0])
         side = np.array([-math.sin(a), math.cos(a), 0.0])
         c_top = np.array([x0, cy, z]) + out_v * r_top

@@ -27,6 +27,7 @@ stage() {
     fi
 }
 stage 01_base      "$BLENDER" -b --python tools/healer_claude/01_base.py
+stage 01b_head     "$BLENDER" -b "$FILE" --python tools/healer_claude/01b_head.py
 stage 02_skirt     "$BLENDER" -b "$FILE" --python tools/healer_claude/02_skirt.py
 stage 03_headwrap  env HEALER_VEIL=0 "$BLENDER" -b "$FILE" --python tools/healer_claude/03_veil.py
 stage 04_cowl      "$BLENDER" -b "$FILE" --python tools/healer_claude/04_cowl.py

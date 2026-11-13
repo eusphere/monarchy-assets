@@ -65,7 +65,9 @@ collection('Garments').objects.link(bod)
 bod.parent = rig
 bm = bmesh.new()
 bm.from_mesh(bod.data)
-bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < 1.26], context='VERTS')
+# Below: under the skirt. Above: the neck is bare skin, so the bodice stops in a round neckline
+# at its base and never climbs the throat.
+bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < 1.26 or (v.co.z > 1.862 and abs(v.co.x) < 0.10)], context='VERTS')
 bm.normal_update()
 for v in bm.verts:
     v.co += v.normal * 0.0035
