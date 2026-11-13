@@ -157,15 +157,21 @@ def voile(name, sheer):
     # Fine vertical grain, with a slower slub so it is not mechanical.
     grain = g.noise(obj, 1.0, 2, 0.5, stretch=(520.0, 520.0, 14.0))
     slub = g.noise(obj, 1.0, 3, 0.6, stretch=(60.0, 60.0, 3.0))
-    tone = g.mix(g.math('MULTIPLY', slub, 0.55), (0.70, 0.60, 0.46, 1), (0.54, 0.45, 0.33, 1))
-    tone = g.mix(g.math('MULTIPLY', grain, 0.25), tone, (0.80, 0.72, 0.59, 1))
+    # A mid-tone parchment, not white: white cloth burns out and hides its own folds.
+    tone = g.mix(g.math('MULTIPLY', slub, 0.55), (0.58, 0.47, 0.33, 1), (0.42, 0.33, 0.23, 1))
+    tone = g.mix(g.math('MULTIPLY', grain, 0.25), tone, (0.70, 0.60, 0.46, 1))
+    # Depth: the insides of folds and the places where cloth lies on cloth go darker and warmer.
+    occ = g.node('ShaderNodeAmbientOcclusion', samples=8)
+    occ.inputs['Distance'].default_value = 0.07
+    shade = g.ramp(occ.outputs['AO'], 0.30, 0.95)
+    tone = g.mix(shade, g.mix(1.0, tone, (0.34, 0.24, 0.17, 1), 'MULTIPLY'), tone)
     g.link(tone, bsdf.inputs['Base Color'])
     bsdf.inputs['Roughness'].default_value = 0.78
     bsdf.inputs['Sheen Weight'].default_value = 0.6
     bsdf.inputs['Sheen Roughness'].default_value = 0.45
     bsdf.inputs['Sheen Tint'].default_value = (1.0, 0.94, 0.84, 1)
     bump = g.node('ShaderNodeBump')
-    bump.inputs['Strength'].default_value = 0.22
+    bump.inputs['Strength'].default_value = 0.38
     bump.inputs['Distance'].default_value = 0.0006
     g.link(g.math('ADD', grain, g.math('MULTIPLY', slub, 0.6)), bump.inputs['Height'])
     g.link(bump.outputs[0], bsdf.inputs['Normal'])
@@ -204,7 +210,7 @@ w.node_tree.nodes.clear()
 g = Graph(w.node_tree)
 wout = g.node('ShaderNodeOutputWorld')
 bg_cam = g.node('ShaderNodeBackground')
-bg_cam.inputs['Color'].default_value = (0.020, 0.016, 0.014, 1)
+bg_cam.inputs['Color'].default_value = (0.030, 0.018, 0.012, 1)
 bg_ref = g.node('ShaderNodeBackground')
 tc = g.node('ShaderNodeTexCoord')
 sep = g.node('ShaderNodeSeparateXYZ')
@@ -218,7 +224,7 @@ col = g.mix(over, (0.035, 0.028, 0.024, 1), (1.0, 0.93, 0.84, 1))
 col = g.mix(left, col, (1.0, 0.90, 0.78, 1), 'ADD')
 col = g.mix(g.math('MULTIPLY', right, 0.5), col, (0.75, 0.84, 1.0, 1), 'ADD')
 g.link(col, bg_ref.inputs['Color'])
-bg_ref.inputs['Strength'].default_value = 0.4
+bg_ref.inputs['Strength'].default_value = 0.22
 lp = g.node('ShaderNodeLightPath')
 mx = g.node('ShaderNodeMixShader')
 g.link(lp.outputs['Is Camera Ray'], mx.inputs[0])
@@ -228,9 +234,28 @@ g.link(mx.outputs[0], wout.inputs['Surface'])
 sc.eevee.use_raytracing = True
 sc.eevee.ray_tracing_options.resolution_scale = '1'
 sc.eevee.use_gtao = True if hasattr(sc.eevee, 'use_gtao') else None
-bpy.data.materials['Studio backdrop'].node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (0.024, 0.019, 0.016, 1)
-bpy.data.objects['Key'].data.energy = 1150
-bpy.data.objects['Fill'].data.energy = 140
+bpy.data.materials['Studio backdrop'].node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (0.060, 0.032, 0.020, 1)
+# One smaller, harder key raking across the figure from her right; very little fill. Depth in
+# cloth comes from shadow, and a big soft light with a strong fill erases it.
+from mathutils import Vector
+
+
+def relight(name, loc, target, energy, size, color):
+    o = bpy.data.objects[name]
+    o.location = loc
+    o.rotation_euler = (Vector(target) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
+    o.data.energy, o.data.size, o.data.color = energy, size, color
+
+
+relight('Key', (-3.9, -2.9, 4.3), (0, 0, 1.25), 2100, 1.7, (1.0, 0.93, 0.84))
+relight('Fill', (3.6, -3.4, 1.4), (0, 0, 1.0), 38, 5.0, (0.86, 0.90, 1.0))
+relight('Rim', (2.4, 3.4, 4.0), (0, 0, 1.5), 950, 2.0, (1.0, 0.90, 0.78))
+if hasattr(sc.eevee, 'fast_gi_method'):                  # Eevee's screen-space occlusion, for the previews
+    sc.eevee.fast_gi_method = 'GLOBAL_ILLUMINATION'
+    sc.eevee.fast_gi_distance = 0.35
+for o in bpy.data.objects:
+    if o.type == 'LIGHT' and hasattr(o.data, 'use_shadow_jitter'):
+        o.data.use_shadow_jitter = True
 
 save()
 render('stage6-front', 0)

@@ -90,7 +90,10 @@ dis.mid_level = 0.35
 body.hide_render = True
 
 # ------------------------------------------------------------------ resting surface
-names = ['Fitted bodice', 'Neck cowl', 'Shoulder wrap', 'Head wrap']
+# The neck cowl settled as two lumps on the shoulders beside a now-bare neck; it is put away
+# until it is redone as a proper shawl, and the collar no longer has to climb over it.
+bpy.data.objects['Neck cowl'].hide_render = bpy.data.objects['Neck cowl'].hide_viewport = True
+names = ['Fitted bodice', 'Shoulder wrap', 'Head wrap', 'Healer - pearl face']
 pts = np.vstack([eval_coords(bpy.data.objects[n]) for n in names])
 pts = pts[(pts[:, 2] > 1.50) & (pts[:, 2] < 1.95)]
 GT = 72
