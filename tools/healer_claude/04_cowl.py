@@ -41,7 +41,7 @@ def torso_point(angle_deg, z, off):
     return np.array([hw * np.cos(a), (bk if s > 0 else fr) * s, z])
 
 
-def strip(name, line, width, band, folds, pin_rows, frames, mass=0.12, pin_top=False):
+def strip(name, line, width, band, folds, pin_rows, frames, mass=0.12, pin_top=False, pin_fracs=()):
     """A pleated strip of cloth `width` wide, gathered into `band`, following `line`."""
     nw = max(int(width / 0.011 * SCALE), 12)
     seg = np.linalg.norm(np.diff(line, axis=0), axis=1)
@@ -73,6 +73,10 @@ def strip(name, line, width, band, folds, pin_rows, frames, mass=0.12, pin_top=F
         rows_to_pin += [apex - 1, apex, apex + 1]
     for r in rows_to_pin:
         idx += list(range(r * nw, (r + 1) * nw))
+    # Tacking stitches: single points along the strip's centre, so the cloth can fold round them.
+    for fr in pin_fracs:
+        r = int(fr * (nl - 1))
+        idx += [r * nw + nw // 2, r * nw + nw // 2 - 1]
     pin.add(idx, 1.0, 'REPLACE')
     cloth = ob.modifiers.new('Cloth', 'CLOTH')
     cs = cloth.settings
@@ -145,6 +149,106 @@ for a in np.linspace(90, 90 - 360 * 2.3, 360):
     t = np.radians(a)
     turns.append((r * np.cos(t), 0.006 + 0.92 * r * np.sin(t), z))
 cowl = strip('Neck cowl', np.array(turns), width=0.26, band=0.10, folds=12, pin_rows=(0, 1, -2, -1), frames=80)
+
+# ---------------------------------------------------------------- sleeves
+# Loose sheer sleeves: a tube cut longer and wider than the arm, held at the shoulder, left to
+# fall onto the arm and gather. Without them the arms are bare mannequin limbs.
+from mathutils import Vector  # noqa: E402
+from mathutils.bvhtree import BVHTree  # noqa: E402
+
+rb_ = {b.name: (np.array(b.head_local), np.array(b.tail_local)) for b in rig.data.bones}
+for n in ('Sleeve.L', 'Sleeve.R', 'Shoulder shawl', 'Bracer.L', 'Bracer.R'):
+    remove(n)
+
+
+def sleeve(side):
+    sh, el = rb_['UpperArm.' + side]
+    el2 = rb_['Forearm.' + side][0]
+    wr = rb_['Hand.' + side][0]
+    end = el2 + (wr - el2) * 0.74                       # tucked under the bracer
+    pts = np.array([sh + (sh - el) * 0.03, sh, (sh + el) / 2, el2, (el2 + end) / 2, end])
+    rad = np.array([0.060, 0.064, 0.062, 0.064, 0.074, 0.092])
+    seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+    d = np.concatenate([[0], np.cumsum(seg)])
+    NA = max(int(44 * SCALE), 20)
+    NL = max(int(d[-1] * 1.22 / 0.011 * SCALE), 24)     # cut a fifth longer than the arm
+    t = np.linspace(0, d[-1], NL)
+    c = np.stack([np.interp(t, d, pts[:, i]) for i in range(3)], -1)
+    r = np.interp(t, d, rad) + 0.0045 * (np.arange(NL) % 2 * 2 - 1) * np.clip(np.arange(NL) / 4, 0, 1)
+    tan = np.gradient(c, axis=0)
+    tan /= np.linalg.norm(tan, axis=1)[:, None]
+    verts = []
+    ref = np.array([0.0, 1.0, 0.0])
+    for i in range(NL):
+        u = np.cross(tan[i], ref)
+        u /= np.linalg.norm(u)
+        v = np.cross(tan[i], u)
+        for j in range(NA):
+            a_ = 2 * np.pi * j / NA
+            verts.append(c[i] + r[i] * (np.cos(a_) * u + np.sin(a_) * v))
+    uv = np.stack([np.repeat((np.arange(NA) / NA)[None, :], NL, 0), np.repeat(t[:, None] * 1.22, NA, 1)], -1)
+    ob = new_object('Sleeve.' + side, verts, grid_faces(NL, NA, True), 'Garments', uv.reshape(-1, 2))
+    pin = ob.vertex_groups.new(name='Pin')
+    pin.add(list(range(2 * NA)), 1.0, 'REPLACE')
+    cloth = ob.modifiers.new('Cloth', 'CLOTH')
+    cs = cloth.settings
+    cs.quality = 8
+    cs.mass = 0.10
+    cs.tension_stiffness = cs.compression_stiffness = 10
+    cs.shear_stiffness = 3
+    cs.bending_stiffness = 0.05
+    cs.tension_damping = cs.compression_damping = 5
+    cs.shear_damping = 5
+    cs.bending_damping = 0.5
+    cs.air_damping = 1.5
+    cs.vertex_group_mass = 'Pin'
+    cc = cloth.collision_settings
+    cc.use_collision = True
+    cc.distance_min = 0.005
+    cc.collision_quality = 4
+    cc.use_self_collision = True
+    cc.self_distance_min = 0.003
+    print('simulating sleeve', side, NL, 'x', NA, flush=True)
+    simulate(ob, 60)
+    ob.parent = rig
+    ob.data.materials.append(bpy.data.materials['Voile'])
+    sub = ob.modifiers.new('Smooth', 'SUBSURF')
+    sub.levels = sub.render_levels = 1
+    return ob
+
+
+sleeves = [sleeve('L'), sleeve('R')]
+
+# ---------------------------------------------------------------- bracers
+# Broad cuffs of the team metal over the wrists, replacing the slim cuffs.
+for n in ('Fit04 tailored glove cuff raised', 'Fit04 tailored glove cuff open'):
+    if n in bpy.data.objects:
+        bpy.data.objects[n].hide_render = bpy.data.objects[n].hide_viewport = True
+for side in ('L', 'R'):
+    el2 = rb_['Forearm.' + side][0]
+    wr = rb_['Hand.' + side][0]
+    ax = (wr - el2) / np.linalg.norm(wr - el2)
+    p0 = wr - ax * 0.084
+    u = np.cross(ax, np.array([0.0, 1.0, 0.0]) if abs(ax[1]) < 0.9 else np.array([1.0, 0.0, 0.0]))
+    u /= np.linalg.norm(u)
+    v = np.cross(ax, u)
+    NB_ = 40
+    prof = [(0.000, 0.0345), (0.005, 0.0345), (0.008, 0.0325), (0.042, 0.0300), (0.078, 0.0280), (0.082, 0.0300), (0.088, 0.0300)]
+    bvv = []
+    for (dd, r_) in prof:
+        bvv += [tuple(p0 + ax * dd + r_ * (np.cos(2 * np.pi * j / NB_) * u + np.sin(2 * np.pi * j / NB_) * v)) for j in range(NB_)]
+    br = new_object('Bracer.' + side, bvv, grid_faces(len(prof), NB_, True), 'Jewelry')
+    face_out(br)
+    br.data.materials.append(bpy.data.materials['TeamAccent'])
+    br.parent = rig
+    vg = br.vertex_groups.new(name='Forearm.' + side)
+    vg.add(list(range(len(bvv))), 1.0, 'REPLACE')
+    am = br.modifiers.new('Healer skin', 'ARMATURE')
+    am.object = rig
+    so = br.modifiers.new('Thickness', 'SOLIDIFY')
+    so.thickness = 0.0035
+    sb = br.modifiers.new('Smooth', 'SUBSURF')
+    sb.levels = sb.render_levels = 1
 
 save()
 render('stage4-wrap-front', 0)

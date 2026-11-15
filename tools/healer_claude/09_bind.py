@@ -158,7 +158,7 @@ def bind(name, weights, rounds=0):
 
 
 # ------------------------------------------------------------------ close garments
-for name in ('Fitted bodice', 'Shoulder wrap', 'Neck cowl'):
+for name in ('Fitted bodice', 'Shoulder wrap', 'Neck cowl', 'Shoulder shawl', 'Sleeve.L', 'Sleeve.R'):
     w, _ = from_body(coords(bpy.data.objects[name]))
     bind(name, w, rounds=4)
 

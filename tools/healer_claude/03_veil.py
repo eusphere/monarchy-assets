@@ -148,7 +148,7 @@ for m in list(skirt.modifiers):
 # The shell covers everything the veil lies on from the shoulders down: torso, wraps and skirt.
 bf = coords(bpy.data.objects['Body form'])
 parts = [coords(skirt), bf[(np.abs(bf[:, 0]) < 0.15) & (np.abs(bf[:, 1]) < 0.125)]]
-for n in ('Shoulder wrap', 'Neck cowl'):
+for n in ('Shoulder wrap', 'Neck cowl', 'Shoulder shawl'):
     if n in bpy.data.objects:
         ob = bpy.data.objects[n]
         parts.append(coords(ob))

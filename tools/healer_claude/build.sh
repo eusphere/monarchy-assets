@@ -31,6 +31,7 @@ stage 01b_head     "$BLENDER" -b "$FILE" --python tools/healer_claude/01b_head.p
 stage 02_skirt     "$BLENDER" -b "$FILE" --python tools/healer_claude/02_skirt.py
 stage 03_headwrap  env HEALER_VEIL=0 "$BLENDER" -b "$FILE" --python tools/healer_claude/03_veil.py
 stage 04_cowl      "$BLENDER" -b "$FILE" --python tools/healer_claude/04_cowl.py
+stage 04b_shawl    "$BLENDER" -b "$FILE" --python tools/healer_claude/04b_shawl.py
 stage 03_veil      "$BLENDER" -b "$FILE" --python tools/healer_claude/03_veil.py
 stage 05_headpiece "$BLENDER" -b "$FILE" --python tools/healer_claude/05_headpiece.py
 stage 06_materials "$BLENDER" -b "$FILE" --python tools/healer_claude/06_materials.py

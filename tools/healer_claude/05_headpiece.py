@@ -58,6 +58,8 @@ if not wrap.get('claude_opened'):
         off = abs((ang + math.pi / 2 + math.pi) % (2 * math.pi) - math.pi)
         if off < OPEN and v.co.z < brow_z + 0.004:
             kill.append(v)
+        elif v.co.z < chin_z + 0.030:                 # nothing round the neck: the hood ends at the nape
+            kill.append(v)
     bmesh.ops.delete(bm, geom=kill, context='VERTS')
     bm.to_mesh(wrap.data)
     bm.free()

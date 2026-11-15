@@ -101,7 +101,7 @@ acc['colorRole'] = 'teamAccent'
 g, out, bsdf = fresh(acc)
 g.link(bsdf.outputs[0], out.inputs['Surface'])
 team = g.node('ShaderNodeRGB', 'Team colour')
-team.outputs[0].default_value = (0.80, 0.45, 0.11, 1)          # default: deep gold
+team.outputs[0].default_value = (0.66, 0.46, 0.20, 1)          # default: a pale, old gold; satin, not polished
 tc = g.node('ShaderNodeTexCoord')
 obj = tc.outputs['Object']
 
@@ -122,7 +122,7 @@ base = g.mix(patch, team.outputs[0], bright)
 base = g.mix(grime, base, deep)
 g.link(base, bsdf.inputs['Base Color'])
 g.link(g.math('SUBTRACT', 1.0, g.math('MULTIPLY', grime, 0.45)), bsdf.inputs['Metallic'])
-rough = g.math('ADD', 0.24, g.math('MULTIPLY', g.math('SUBTRACT', 1.0, patch), 0.22))
+rough = g.math('ADD', 0.36, g.math('MULTIPLY', g.math('SUBTRACT', 1.0, patch), 0.20))
 rough = g.math('ADD', rough, g.math('MULTIPLY', grime, 0.38))
 rough = g.math('ADD', rough, g.math('MULTIPLY', g.math('SUBTRACT', fine, 0.5), 0.10), clamp=True)
 g.link(rough, bsdf.inputs['Roughness'])
@@ -165,6 +165,22 @@ def voile(name, sheer):
     occ.inputs['Distance'].default_value = 0.07
     shade = g.ramp(occ.outputs['AO'], 0.30, 0.95)
     tone = g.mix(shade, g.mix(1.0, tone, (0.34, 0.24, 0.17, 1), 'MULTIPLY'), tone)
+    # Lace: a net of raised threads at two sizes, paler than the ground. In the sheer cloth the
+    # threads are solid and the ground between them is open.
+    def net(scale):
+        v = g.node('ShaderNodeTexVoronoi', feature='DISTANCE_TO_EDGE')
+        v.inputs['Scale'].default_value = scale
+        g.link(obj, v.inputs['Vector'])
+        return g.ramp(v.outputs['Distance'], 0.085, 0.015)
+    lace = g.math('MAXIMUM', net(170.0), g.math('MULTIPLY', net(64.0), 0.6))
+    tone = g.mix(g.math('MULTIPLY', lace, 0.42), tone, (0.74, 0.65, 0.50, 1))
+    # Old stains, faint and rust-brown, heavier toward the hem.
+    sep = g.node('ShaderNodeSeparateXYZ')
+    g.link(obj, sep.inputs[0])
+    low = g.ramp(sep.outputs[2], 1.55, 0.05)
+    blot = g.ramp(g.noise(obj, 7.0, 6, 0.65), 0.60, 0.74)
+    stain = g.math('MULTIPLY', g.math('MULTIPLY', blot, g.math('ADD', 0.25, g.math('MULTIPLY', low, 0.75))), 0.55)
+    tone = g.mix(stain, tone, (0.30, 0.10, 0.07, 1))
     g.link(tone, bsdf.inputs['Base Color'])
     bsdf.inputs['Roughness'].default_value = 0.78
     bsdf.inputs['Sheen Weight'].default_value = 0.6
@@ -173,7 +189,7 @@ def voile(name, sheer):
     bump = g.node('ShaderNodeBump')
     bump.inputs['Strength'].default_value = 0.38
     bump.inputs['Distance'].default_value = 0.0006
-    g.link(g.math('ADD', grain, g.math('MULTIPLY', slub, 0.6)), bump.inputs['Height'])
+    g.link(g.math('ADD', g.math('ADD', grain, g.math('MULTIPLY', slub, 0.6)), g.math('MULTIPLY', lace, 1.6)), bump.inputs['Height'])
     g.link(bump.outputs[0], bsdf.inputs['Normal'])
     if sheer:
         # Gauze: see-through face-on, solid where it turns away or folds back on itself.
@@ -181,6 +197,7 @@ def voile(name, sheer):
         lw.inputs['Blend'].default_value = 0.35
         opacity = g.math('ADD', 0.50, g.math('MULTIPLY', lw.outputs['Facing'], 0.50), clamp=True)
         opacity = g.math('ADD', opacity, g.math('MULTIPLY', g.math('SUBTRACT', grain, 0.5), 0.25), clamp=True)
+        opacity = g.math('ADD', g.math('MULTIPLY', opacity, 0.80), g.math('MULTIPLY', lace, 0.55), clamp=True)
         tr = g.node('ShaderNodeBsdfTransparent')
         mx = g.node('ShaderNodeMixShader')
         g.link(opacity, mx.inputs[0])
@@ -199,6 +216,33 @@ sheer = voile('Voile sheer', True)
 veil = bpy.data.objects['Head veil']
 veil.data.materials.clear()
 veil.data.materials.append(sheer)
+for n in ('Sleeve.L', 'Sleeve.R'):
+    if n in bpy.data.objects:
+        bpy.data.objects[n].data.materials.clear()
+        bpy.data.objects[n].data.materials.append(sheer)
+# Skin: pale but alive, warmer than the cloth's shadows, never the brightest thing in the frame.
+sk = bpy.data.materials.get('Healer skin')
+if sk:
+    for nd in sk.node_tree.nodes:
+        if nd.bl_idname == 'ShaderNodeMix':
+            nd.inputs[6].default_value = (0.50, 0.385, 0.32, 1)
+            nd.inputs[7].default_value = (0.040, 0.008, 0.010, 1)
+        if nd.bl_idname == 'ShaderNodeBsdfPrincipled':
+            nd.inputs['Subsurface Weight'].default_value = 0.30
+            nd.inputs['Subsurface Radius'].default_value = (0.020, 0.008, 0.005)
+# The hands are the same flesh as the face, not white gloves.
+for ob in bpy.data.objects:
+    if ob.name.startswith('Fit05 posed glove'):
+        for gm in ob.data.materials:
+            pb = gm.node_tree.nodes.get('Principled BSDF') if gm and gm.use_nodes else None
+            if pb:
+                for l in list(pb.inputs['Base Color'].links):
+                    gm.node_tree.links.remove(l)
+                pb.inputs['Base Color'].default_value = (0.50, 0.385, 0.32, 1)
+                pb.inputs['Roughness'].default_value = 0.55
+                pb.inputs['Subsurface Weight'].default_value = 0.30
+                pb.inputs['Subsurface Radius'].default_value = (0.020, 0.008, 0.005)
+                pb.inputs['Subsurface Scale'].default_value = 0.05
 lining = bpy.data.materials['Body lining ivory']
 lining.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (0.72, 0.63, 0.50, 1)
 
